@@ -3,7 +3,7 @@ import time
 import serial
 
 ser = serial.Serial(
-    port = '/dev/ttyUSB0',
+    port = '/dev/ttyS0',
     baudrate = 9600,
     parity = serial.PARITY_NONE,
     stopbits = serial.STOPBITS_ONE,
@@ -11,6 +11,7 @@ ser = serial.Serial(
 )
 
 while True:
-    data = input("Enter data to send: ")
-    ser.write(data,"/n")
-    time.sleep(1)
+    #data = input("Enter data to send: ")
+    #data = data + '\n'
+    ser.write(b'hi0')
+    time.sleep(2)
