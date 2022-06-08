@@ -6,9 +6,13 @@ hold simple scripts for sending and receiving data via the respective board's se
 
 ## Hierarchy
  -rpiCode  
-    -serial_write_script.py  
-    -serial_read_script.py  
- -arduiCode  
-    -serial_read.ino  
-    -serial_write.ino  
+<ul>
+<li>-serial_write_script.py  
+<li>-serial_read_script.py  
+</ul>
+-arduiCode
+<ul>  
+<li>-serial_read.ino  
+<li>-serial_write.ino 
+</ul>
 
