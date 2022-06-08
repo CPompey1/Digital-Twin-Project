@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+
+#This script reads input from the rx/tx serial ports and prints the unformatted data to the command line.
 import time
 import serial
 

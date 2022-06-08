@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+
+#This script sends the string "Hello from RPi" through the serial port of the tx/rx pins. 
+#The device name of the serial port is serial0. ttyS0 by default points to this port. 
 import time
 import serial
 
@@ -10,8 +13,6 @@ ser = serial.Serial(
     bytesize = serial.EIGHTBITS
 )
 
-while True:
-    #data = input("Enter data to send: ")
-    #data = data + '\n'
-    ser.write(b'hi0')
+while True
+    ser.write("Hi From RPi")
     time.sleep(2)
