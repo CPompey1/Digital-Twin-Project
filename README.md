@@ -5,10 +5,10 @@ This repository contains two different folders which will hold the code for the 
 hold simple scripts for sending and receiving data via the respective board's serial ports.
 
 ## Hierarchy
- -rpiCode
-    -serial_write_script.py
-    -serial_read_script.py
- -arduiCode
-    -serial_read.ino
-    -serial_write.ino
+ -rpiCode  
+    -serial_write_script.py  
+    -serial_read_script.py  
+ -arduiCode  
+    -serial_read.ino  
+    -serial_write.ino  
 
