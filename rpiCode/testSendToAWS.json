@@ -1,0 +1,11 @@
+{
+    "action": "upload_data",
+    "epoch_time": 1654825725,
+    "data": {
+	"temperature_one": {
+	    "degrees_celsius": 21
+	},
+	"temperature_two": {
+	    "degrees_celsius": 32
+	}
+    }
