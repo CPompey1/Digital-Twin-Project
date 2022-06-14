@@ -13,6 +13,6 @@ ser = serial.Serial(
     bytesize = serial.EIGHTBITS
 )
 
-while True
-    ser.write("Hi From RPi")
+while True:
+    ser.write(b'Hi From RPi')
     time.sleep(2)
