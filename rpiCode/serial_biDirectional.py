@@ -4,16 +4,16 @@ import time
 import serial
 WORD = 32
 
-
-def main():
-    ser = serial.Serial(
+ser = serial.Serial(
         port = '/dev/ttyS0',
         baudrate = 9600,
         parity = serial.PARITY_NONE,
         stopbits = serial.STOPBITS_ONE,
         bytesize = serial.EIGHTBITS
     )
-    while true:
+
+def main():
+    while True:
         #Check if there is any data from serial ports
         if(ser.in_waiting > 0):
             #If there is data, parse it
@@ -66,8 +66,8 @@ def parseOutput(wordSize, message):
 
         #If its a simple string message send directly to serial ports
         case '~':
+            ser.write(messageT)
 
-    pass
 
 
 
