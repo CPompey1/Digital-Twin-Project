@@ -17,7 +17,7 @@ def main():
         #Check if there is any data from serial ports
         if(ser.in_waiting > 0):
             #If there is data, parse it
-            temp = bytes(ser.read_until(size=WORD))
+            temp = ser.read_until(size=WORD)
 
             parseInput(WORD,temp)
 
@@ -27,13 +27,17 @@ def main():
         #If y, ask to enter message
         if (tempClause == "Y" or tempClause == "y"):
             bufferOut = input("Enter message:")
-
+        
             #Pass input message to parseOutput
             parseOutput(WORD, bufferOut)
         #If anything else proceed on 
 
 
 def parseInput(wordSize, bufferIn):
+
+    #convert string to series of bytes
+    bytes(bufferIn)
+
     #Check first byte of input buffer
     flag = bufferIn[0]
 
@@ -51,8 +55,18 @@ def parseInput(wordSize, bufferIn):
     
 
 def parseOutput(wordSize, message):
+    #convert string to series of byes
+    messageT = bytes(message)
+
     #Get first byte
+    flag = messageT[0]
+
     #Switching for statement for how to pack input message based on flag
+    match flag:
+
+        #If its a simple string message send directly to serial ports
+        case '~':
+
     pass
 
 
