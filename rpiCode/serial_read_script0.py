@@ -1,0 +1,17 @@
+#!/usr/bin/env python
+
+#This script reads input from the rx/tx serial ports and prints the unformatted data to the command line.
+import time
+import serial
+
+ser = serial.Serial(
+    port = '/dev/ttyS0',
+    baudrate = 9600,
+    parity = serial.PARITY_NONE,
+    stopbits = serial.STOPBITS_ONE,
+    bytesize = serial.EIGHTBITS
+)
+
+while True:
+    x = ser.readline()
+    print(x)

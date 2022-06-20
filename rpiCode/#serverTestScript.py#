@@ -1,0 +1,10 @@
+#r/bin/env python
+
+from websocket import create_connection
+
+
+ws = create_connection("wws://cvyykl1zo6.execute-api.us-east-1.amazonaws.com/prod",header="x-api-key: {zQXx6dS25g1osj74gXAL51nAmdAOBANL2gAvR3O8}")
+#await websocket.send("Heyyyy Matt")
+response = websocket.recv()
+print(response)
+we.close()
