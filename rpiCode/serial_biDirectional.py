@@ -12,27 +12,7 @@ ser = serial.Serial(
         bytesize = serial.EIGHTBITS
     )
 
-def main():
-    while True:
-        #Check if there is any data from serial ports
-        if(ser.in_waiting > 0):
-            #If there is data, parse it
-            temp = ser.read_until(size=WORD)
-
-            parseInput(WORD,temp)
-
-        #Ask to send a message
-        tempClause = input("Do you want to send a nessage?(y/n)")
-
-        #If y, ask to enter message
-        if (tempClause == "Y" or tempClause == "y"):
-            bufferOut = input("Enter message:")
-        
-            #Pass input message to parseOutput
-            parseOutput(WORD, bufferOut)
-        #If anything else proceed on 
-
-
+                
 def parseInput(wordSize, bufferIn):
 
     #convert string to series of bytes
@@ -42,16 +22,16 @@ def parseInput(wordSize, bufferIn):
     flag = bufferIn[0]
 
     #Switching statement for parsing different types of flags
-    match flag:
-        case '~':
-            bufferInL = list(bufferIn)
-            bufferInL.remove(ord('~'))
-            print(bytes(bufferInL).decode())
+    if (flag== '~'):
+        bufferInL = list(bufferIn)
+        bufferInL.remove(ord('~'))
+        bufferInB = bytes(bufferInL)
+        print(bufferInB.decode)
 
 
-        case default:
-            print("Invalid or Unimplemented message type")
-    #Flush input buffer
+    else:
+        print("Invalid or Unimplemented message type")
+        #Flush input buffer
     
 
 def parseOutput(wordSize, message):
@@ -62,19 +42,28 @@ def parseOutput(wordSize, message):
     flag = messageT[0]
 
     #Switching for statement for how to pack input message based on flag
-    match flag:
+    #If its a simple string message send directly to serial ports
+    if flag == '~':
+        ser.write(messageT)
 
-        #If its a simple string message send directly to serial ports
-        case '~':
-            ser.write(messageT)
+def main():
+    while True:
+    #Check if there is any data from serial ports
+        if(ser.in_waiting > 0):
+            print("test1")
+            #If there is data, parse it
+            temp = ser.read_until(size=WORD)
+            parseInput(WORD,temp)
+            
+        #Ask to send a message
+        tempClause = input("Do you want to send a nessage?(y/n)")
 
-
-
-
-
-
-
-
-
-if __name__ == "main":
+        #If y, ask to enter message
+        if (tempClause == "Y" or tempClause == "y"):
+            bufferOut = input("Enter message:")
+            
+            #Pass input message to parseOutput
+            parseOutput(WORD,bufferOut)
+            
+if __name__ == '__main__':
     main()

@@ -49,6 +49,7 @@ void loop(){
     //Check and Parse data received through serial
     while (numBytesRec = Serial.available() > 0){
       Serial.readBytes(recBuf,numBytesRec);
+      Serial.write(byte(recBuf));
       parseRecData(recBuf);
       flushBuf(recBuf);
     }
