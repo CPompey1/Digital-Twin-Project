@@ -11,14 +11,17 @@
 #define A2RC 22    //Arduino to Raspberry pi command
 #define A2RS '>'  //Arduino to Raspberry pi String message
 #define R2AD 14    //Raspberry pi to Arduino data object
-#define R2AC 15    //Raspberry pi to Arduinp command
+#define R2AC '-'    //Raspberry pi to Arduinp command
 #define R2AS '<'    //Raspberry pi to arduino string message
+
+//Commands
+#define DUMD "dumDat"
 
 /***********************************************************************************
 Program Name: biDirectional Communication via Serial Ports
 Author: Cristian Pompey
 Date Created: 6/8/2022
-Last Edit: 6/8/2022
+Last Edit: 6/27/2022
 Description: This program will set up and run a basic bi-directional communication
              scheme with an expected raspberry pi device. The arduino will get information
              local sensors, and communicate this data to a raspberry pi device via serial 
@@ -38,22 +41,12 @@ short numBytesRec = 0;         //Number of bytes received data buffer
 boolean dataAvailable = false;
 
 
-    
 void setup(){
     Serial.begin(9600);
     //attatch hardware timer to detectData function (lib needs to be installed)
 }
 
 void loop(){
-
-    //Check and Parse data received through serial
-    /*while (numBytesRec = Serial.available() > 0){
-      Serial.readBytes(recBuf,numBytesRec);
-      Serial.write(byte(recBuf));
-      parseRecData(recBuf,numBytesRec);
-      flushBuf(recBuf);
-    }
-    */
 
     //If there is sensor data available, format it and send it through serial
     while (dataAvailable){
@@ -62,7 +55,7 @@ void loop(){
       flushBuf(sendBuf);
     }
     
-    
+   
 }
 
 /* Will parse data from sensors  and pack into a formatted series of bytes: sendBuf sendable to 
@@ -77,55 +70,76 @@ void parseSensData(byte *buf){
  * string message. If it is from the serial monitor, then it will send the data to the external device over
  * serial ports.
  */
-void parseRecData(byte *buf,int len){
-  char temp[WORD];
+void parseRecData(size_t len){
+  char temp[WORD -1];
 
-  switch(buf[0]){
+  //Read in bytes from buffer
+  Serial.readBytes(recBuf,len);
 
-    //If its a string from the serial monitor, echo it and send to external device
+  //Print incoming byte series as test line
+  ////strncpy(temp,recBuf,len);
+  //temp[len] = "\0";
+  //Serial.print("Incoming Bytes: ");
+  //Serial.println(temp);
+
+  switch(recBuf[0]){
+
+    //If its a string  and send to external device
     case A2RS:
-      //echho to external device
-      strncpy(temp,buf,len);
-      temp[len] = '\0';
-      Serial.write(buf,len);
+      strncpy(temp,&recBuf[1],len);
+      temp[len] = "\0";
+      //Serial.print("Sending String: ");
       Serial.println(temp);
+      
+
+      //Echo to RPi
+      Serial.write(recBuf,len);
+      break;
 
     //If it is a command from the serial monitor, send it directly to external device
     case A2RC:
-      Serial.write(buf,WORD);
+      Serial.write(recBuf,WORD);
+      break;
 
     //If it is a data object from external device, parse it
     case R2AD:
-      parseRpiDat(buf);
+      parseRpiDat(recBuf);
+      break;
 
     //If it a string from external device, print it to serial monitor
     case R2AS:
-      strncpy(temp,buf[1],WORD - 1);
+      strncpy(temp,&recBuf[1],len);
+      temp[len] = "\0";
+      Serial.print("Received String: ");
       Serial.println(temp);
+      break;
       
       
   //If it is a command from external device then parse it as such
     case R2AC:
-      parseRpiCmd(buf);
+      parseRpiCmd(&recBuf[1]);
+      break;
     
   }
+
+  flushBuf(recBuf);
          
 }
   
-  
+void serialEvent(){
+  delay(300);
+  //Get num of bytes in buffer
+  size_t numBytesRec = Serial.available();
+
+  //Pass size to rec Data func
+  parseRecData(numBytesRec);
+}
 
 
 /* Checks if there is any data available from local 
    sensors and packs it into send buffer */
 void detectData(){
 
-}
-
-void serialEvent(){
-  delay(100);
-  size_t numBytesRec =Serial.available();
-  Serial.readBytes(recBuf,numBytesRec);
-  parseRecData(recBuf,numBytesRec);
 }
 
 //sets all entries in byte array to 0
@@ -142,5 +156,32 @@ void parseRpiDat(byte *buf){
 
 //Parses command from external device
 void parseRpiCmd(byte *buf){
-  
+  //Entering parse cmd
+  short temp = 1;
+
+  //Temporary fix 
+  if (strcmp(DUMD,buf) == 0){
+    dumD(); 
+  }
+
+  //Ideally would be a switching statement here
+  //Search for valid command
+  /*switch (buf[0]){
+    case DUMD:
+      dumD();
+      break;
+
+  }
+  */
+  flushBuf(sendBuf);
+}
+
+void dumD(){
+  //Entering an receiving dummy dat
+  //Serial.println("Entering dumm dat func");
+  //Format dummy data
+  byte temp = 42;
+  sendBuf[0] = A2RD;
+  sendBuf[1] = temp;
+  Serial.write(sendBuf,2);
 }
