@@ -47,12 +47,13 @@ void setup(){
 void loop(){
 
     //Check and Parse data received through serial
-    while (numBytesRec = Serial.available() > 0){
+    /*while (numBytesRec = Serial.available() > 0){
       Serial.readBytes(recBuf,numBytesRec);
       Serial.write(byte(recBuf));
-      parseRecData(recBuf);
+      parseRecData(recBuf,numBytesRec);
       flushBuf(recBuf);
     }
+    */
 
     //If there is sensor data available, format it and send it through serial
     while (dataAvailable){
@@ -76,15 +77,17 @@ void parseSensData(byte *buf){
  * string message. If it is from the serial monitor, then it will send the data to the external device over
  * serial ports.
  */
-void parseRecData(byte *buf){
-  char temp[WORD -1];
+void parseRecData(byte *buf,int len){
+  char temp[WORD];
 
   switch(buf[0]){
 
     //If its a string from the serial monitor, echo it and send to external device
     case A2RS:
-      Serial.write(buf,WORD);
-      strncpy(temp,buf[1],WORD -1);
+      //echho to external device
+      strncpy(temp,buf,len);
+      temp[len] = '\0';
+      Serial.write(buf,len);
       Serial.println(temp);
 
     //If it is a command from the serial monitor, send it directly to external device
@@ -116,6 +119,13 @@ void parseRecData(byte *buf){
    sensors and packs it into send buffer */
 void detectData(){
 
+}
+
+void serialEvent(){
+  delay(100);
+  size_t numBytesRec =Serial.available();
+  Serial.readBytes(recBuf,numBytesRec);
+  parseRecData(recBuf,numBytesRec);
 }
 
 //sets all entries in byte array to 0

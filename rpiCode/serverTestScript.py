@@ -1,12 +1,10 @@
 #r/bin/env python
 
-import asyncio
-import websockets
+from websocket import create_connection
 
-async def hello():
-    async with websockets.connect("wss://cvyykl1zo6.execute-api.us-east-1.amazonaws.com/prod",extra_headers="x-api-key: {zQXx6dS25g1osj74gXAL51nAmdAOBANL2gAvR3O8}") as websocket:
-        #await websocket.send("x-api-key: {zQXx6dS25g1osj74gXAL51nAmdAOBANL2gAvR3O8}")
-        await websocket.send("Heyyyy Matt")
-        response = await websocket.recv()
-        print(response)
-asyncio.run(hello())
+
+ws = create_connection("wss://cvyykl1zo6.execute-api.us-east-1.amazonaws.com/prod",header={'x-api-key':'zQXx6dS25g1osj74gXAL51nAmdAOBANL2gAvR3O8'})
+ws.send("Heyyyy Matt")
+response = ws.recv()
+print(response)
+ws.close()
