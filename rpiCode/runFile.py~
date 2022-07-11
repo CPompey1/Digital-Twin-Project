@@ -1,0 +1,30 @@
+import serial_biDirectionalScript as serBds
+import WSScript as wsBds
+import time
+import threading
+
+
+def  main():
+    #Controls access of json data to be sent to cloud
+    dataLock = threading.lock()
+
+    serBdsT = threading.Thread(target=serBds.mainFunc(dataLock))
+    wsBdsT = threading.Thread(target = wsBds.mainFunc(dataLock))
+    running = True
+
+    serBdsT.start()
+    wsBdsT.start()
+    while(running):
+
+        #Prompt for message while scripts run
+        tempMessage = input("1)Enter message to send to serial(or exit): ")
+
+        if tempClause == "exit":
+            running = False
+        else:
+            serBds.parseOutput(tempMessage)
+    
+
+if __name__ == "__main__":
+    main()
+        

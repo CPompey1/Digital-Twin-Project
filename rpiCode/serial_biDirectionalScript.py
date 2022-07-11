@@ -3,6 +3,7 @@
 import time
 import serial
 import json
+import threading
 
 WORD = 32
 A2RD = 11
@@ -21,7 +22,7 @@ ser = serial.Serial(
     )
 
                 
-def parseInput(wordSize, bufferIn,dataAval):
+def parseInput(wordSize, bufferIn,dataLock):
 
 
     #Check first byte of input buffer
@@ -40,31 +41,36 @@ def parseInput(wordSize, bufferIn,dataAval):
         #write to jsosn file
         out = {
             "action" : "upload_data",
-            "epoch_time": time.time(),
+            "epoch_time": int(time.time()) * 1000,
             "data": {
-                "temperature" : int(bufferIn[1]),
+                "temperature" : {
+                   "degrees_celsius" : int(bufferIn[1])
+                }
             }
         }
         json_obj = json.dumps(out)
+
+        dataLock.acquire()
         with open("dat.json","w") as outfile:
             outfile.write(json_obj)
         #Flush input buffer
 
-        dataAval = True
+        dataLock.release()
         
     
 def parseOutput(message):
-    #convert string to series of byes
-    messageT = bytes(message,'ASCII')
-
     #Get first byte
-    flag = messageT[0]
+    flag = message[0]
+
+    #convert string to series of byes
+    messageB = bytes(message,'ASCII')
+    
 
     #Switching for statement for how to pack input message based on flag
     #If its a simple string message 
     if flag == R2AS:
         # Send directly to serial ports
-        ser.write(messageT)
+        ser.write(messageB)
 
         #Arduino echoes srting so wait and flush
         time.sleep(2)
@@ -75,13 +81,15 @@ def parseOutput(message):
         #In future should parse convert typed command string
         #formatted command data obj instead of arduino
         #doing work.
-        ser.write()
-def mainFunc(dataAval):
+        ser.write(messageB)
+def mainFunc(dataLock):
     while True:
     #Check if there is any data from serial ports
         if(ser.in_waiting > 0):
+            time.sleep(.5)
+            print(ser.in_waiting)
             #If there is data, parse it
             temp = ser.read_until(size=ser.in_waiting)
-            parseInput(WORD,temp,dataAval)
+            parseInput(WORD,temp,dataLock)
             ser.flushInput()
 

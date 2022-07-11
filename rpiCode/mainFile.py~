@@ -1,0 +1,6 @@
+from multiprocessing import *
+import serial_biDirectionalScript.py
+import
+if __name__ == '__main__':
+    with multiprocessing.Manager() as manager:
+        
