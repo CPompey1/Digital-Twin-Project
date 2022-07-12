@@ -13,7 +13,6 @@ R2AC = '-'
 
 dataAval = False
 data = "0"
-ws = create_connection("wss://cvyykl1zo6.execute-api.us-east-1.amazonaws.com/prod",header={'x-api-key':'zQXx6dS25g1osj74gXAL51nAmdAOBANL2gAvR3O8'})
 
 ser = serial.Serial(
         port = '/dev/ttyS0',
@@ -31,7 +30,7 @@ def main():
         wss_main = multiprocessing.Process(target = wsMainFunc, args=(dataAval,))
 
         bds_main.start()
-        wss_main.start()
+        #wss_main.start()
         running = True
         while(running):
             #Ask to send a message
@@ -83,14 +82,15 @@ def parseInput(wordSize, bufferIn,dataAval):
     
 def parseOutput(message):
     #convert string to series of byes
+    flag = message[0]
     messageT = bytes(message,'ASCII')
-
+    print(messageT)
     #Get first byte
-    flag = messageT[0]
 
     #Switching for statement for how to pack input message based on flag
     #If its a simple string message 
     if flag == R2AS:
+        
         # Send directly to serial ports
         ser.write(messageT)
 
@@ -103,9 +103,37 @@ def parseOutput(message):
         #In future should parse convert typed command string
         #formatted command data obj instead of arduino
         #doing work.
-        ser.write()
+        print("its a command")
+        sentB = ser.write(messageT)
+        print(sentB)
         
 def wsMainFunc(dataAval):
+            tempClause = input("1)Send message \n2)exit \n")
+            #If y, ask to enter message
+            if (tempClause == "1"):
+                bufferOut = input("Enter message:")
+                
+                #Pass input message to parseOutput
+                
+                parseOutput(bufferOut)
+            elif(tempClause == "2"):
+                running = False
+            
+        bds_main.kill()
+        wss_main.kill()
+
+def parseInput(wordSize, bufferIn,dataAval):
+
+
+    #Check first byte of input buffer
+    flag = bufferIn[0]
+
+    #Switching statement for parsing different types of flags
+    #if the arduino sent a string
+    if (flag== A2RS):
+        bufferInL = list(bufferIn,'ASCII')
+        bufferInL.remove(ord('~'))
+        bufferInB = bytes(bufferInL,'ASCII')
     while True:
         if dataAval:
             with open('dat.json','r') as openfile:
@@ -116,11 +144,14 @@ def wsMainFunc(dataAval):
 def bdsMainFunc(dataAval):
     while True:
     #Check if there is any data from serial ports
-        if(ser.in_waiting > 0):
+        if ser.in_waiting > 0:
             #If there is data, parse it
+            print(ser.in_waiting)
             temp = ser.read_until(size=ser.in_waiting)
-            parseInput(WORD,temp,dataAval)
+            print(len(temp))
+            #parseInput(WORD,temp,dataAval)
             ser.flushInput()
+            
 
 if __name__ == "__main__":
     main()
