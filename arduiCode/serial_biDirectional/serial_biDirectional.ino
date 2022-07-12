@@ -1,22 +1,4 @@
 
-/********************************Includes*********************************************/
-#include <string.h>
-
-/********************************Constants*********************************************/
-#define WORD 32 
-
-/********************************Flags*********************************************/
-//ASCII charactors 1-10 will be reserved as flags for types of sensors
-#define A2RD 11    //Arduino to Raspberry pi data object 
-#define A2RC 22    //Arduino to Raspberry pi command
-#define A2RS '>'  //Arduino to Raspberry pi String message
-#define R2AD 14    //Raspberry pi to Arduino data object
-#define R2AC '-'    //Raspberry pi to Arduinp command
-#define R2AS '<'    //Raspberry pi to arduino string message
-
-//Commands
-#define DUMD "dumDat"
-
 /***********************************************************************************
 Program Name: biDirectional Communication via Serial Ports
 Author: Cristian Pompey
@@ -34,15 +16,51 @@ Description: This program will set up and run a basic bi-directional communicati
              that will be represented as a short data type in the code. When there is data availiable from 
              the RPi through the serial ports, we will parse it as a command or simple string to display.
 ***********************************************************************************************/
+
+/********************************Includes*********************************************/
+#include <string.h>
+#include <Adafruit_MPU6050.h>
+#include <Adafruit_Sensor.h>
+#include <Wire.h>
+
+
+/********************************Constants*********************************************/
+#define WORD 64 
+#define TCADRS 0x70  //Address for i2c perifphial
+#define FCF    19.5  //calibration factor for flexiforce sensor
+#define MPU0 1        
+#define MPU1 2
+#define MPU2 7
+
+/********************************Flags*********************************************/
+//ASCII charactors 1-10 will be reserved as flags for types of sensors
+#define A2RD 11    //Arduino to Raspberry pi data object 
+#define A2RC 22    //Arduino to Raspberry pi command
+#define A2RS '>'  //Arduino to Raspberry pi String message
+#define R2AD 14    //Raspberry pi to Arduino data object
+#define R2AC '-'    //Raspberry pi to Arduinp command
+#define R2AS '<'    //Raspberry pi to arduino string message
+
+/******************************** Objects and Variables*********************************************/
+//MPU sensors
+
+Adafruit_MPU6050 mpu[3] = {Adafruit_MPU6050(), Adafruit_MPU6050(), Adafruit_MPU6050()};
+
+
+int FS = A0;          //flexi force sensor
 byte recBuf[WORD];               //64 byte buffer to hold a received data
 byte sendBuf[WORD];               //Buffer to hold data to be sent
 byte flag = 0;
 short numBytesRec = 0;         //Number of bytes received data buffer
 boolean dataAvailable = false;
 
+//Commands
+#define DUMD "dumDat"
+
 
 void setup(){
     Serial.begin(9600);
+    pinMode(FS,INPUT);
     //attatch hardware timer to detectData function (lib needs to be installed)
 }
 
@@ -139,7 +157,53 @@ void serialEvent(){
 /* Checks if there is any data available from local 
    sensors and packs it into send buffer */
 void detectData(){
+  sensors_event_t a,g,foo;
+  
+  //Get pressure data
+  int fdata = analogRead(FS);
+  float vout = fdata * FCF;
 
+  //Pack into send buf
+  *(float *)sendBuf = vout; 
+
+  //Get first MPU data
+  tcaselect(MPU0);
+  mpu[0].getEvent(&a,&g,&foo);
+  *(int *)(sendBuf+4) = a.acceleration.x;
+  *(int *)(sendBuf+8) = a.acceleration.y;
+  *(int *)(sendBuf+12) = a.acceleration.z;
+
+  *(int *)(sendBuf+16) = g.gyro.x;
+  *(int *)(sendBuf+20) = g.gyro.y;
+  *(int *)(sendBuf+24) = g.gyro.z;
+
+  //Get second MPU data
+  tcaselect(MPU1);
+  mpu[1].getEvent(&a,&g,&foo);
+  *(int *)(sendBuf+28) = a.acceleration.x;
+  *(int *)(sendBuf+32) = a.acceleration.y;
+  *(int *)(sendBuf+36) = a.acceleration.z;
+
+  *(int *)(sendBuf+40) = g.gyro.x;
+  *(int *)(sendBuf+44) = g.gyro.y;
+  *(int *)(sendBuf+48) = g.gyro.z;
+
+  //Get 3rd MPU data
+  tcaselect(MPU2);
+  mpu[2].getEvent(&a,&g,&foo);
+  *(int *)(sendBuf+28) = a.acceleration.x;
+  *(int *)(sendBuf+32) = a.acceleration.y;
+  *(int *)(sendBuf+36) = a.acceleration.z;
+
+  *(int *)(sendBuf+40) = g.gyro.x;
+  *(int *)(sendBuf+44) = g.gyro.y;
+  *(int *)(sendBuf+48) = g.gyro.z;
+
+  
+  
+  //Send data pver serial
+  Serial.write(sendBuf,54);
+  flushBuf(sendBuf);
 }
 
 //sets all entries in byte array to 0
@@ -185,3 +249,34 @@ void dumD(){
   sendBuf[1] = temp;
   Serial.write(sendBuf,2);
 }
+
+/**********************************************************
+ * This function sets up each mpu sensor that is connected to the tca expander.
+ * It seleects each individual mpu sensor by telling the tca expander which 
+ * MPU it wants to communicate to, then sets the configuration settings of that MPU sensor.
+ */
+void setUpMPU(){
+  tcaselect(MPU0);
+  mpu[0].setAccelerometerRange(MPU6050_RANGE_8_G);
+  mpu[0].setGyroRange(MPU6050_RANGE_500_DEG);
+  mpu[0].setFilterBandwidth(MPU6050_BAND_21_HZ);
+  
+  tcaselect(MPU1);
+  mpu[1].setAccelerometerRange(MPU6050_RANGE_8_G);
+  mpu[1].setGyroRange(MPU6050_RANGE_500_DEG);
+  mpu[1].setFilterBandwidth(MPU6050_BAND_21_HZ);
+
+  tcaselect(MPU2);
+  mpu[2].setAccelerometerRange(MPU6050_RANGE_8_G);
+  mpu[2].setGyroRange(MPU6050_RANGE_500_DEG);
+  mpu[2].setFilterBandwidth(MPU6050_BAND_21_HZ);
+}
+
+void tcaselect(uint8_t selector) {
+  
+  if (selector > 7) return;
+  Wire.beginTransmission(TCADRS);
+  Wire.write(1 << selector);
+  Wire.endTransmission();
+}
+  
